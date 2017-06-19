@@ -1,0 +1,95 @@
+# to build 3hdeng/laverna:4.7 
+#FROM node:4.7
+
+#RUN npm install -g node-sass 
+#RUN npm install -g bower gulp gulp-cli && \
+#    echo '{ "allow_root": true }' > /root/.bowerrc
+#RUN apt-get update && DEBIAN_FRONTEND=noninteractive && \
+#  apt-get install -y  vim
+#===============================================
+FROM 3hdeng/nodejs:4.7
+
+
+#============================
+RUN npm install -g electron-packager
+
+#=== suchja/x11client =================
+#FROM debian:jessie
+#MAINTAINER Jan Suchotzki <jan@suchotzki.de>
+
+# first create user and group for all the X Window stuff
+# required to do this first so we have consistent uid/gid between server and client container
+RUN addgroup --system xusers \
+  && adduser \
+			--home /home/xclient \
+			--disabled-password \
+			--shell /bin/bash \
+			--gecos "user for running an xclient application" \
+			--ingroup xusers \
+			--quiet \
+			xclient
+
+# Install packages required for connecting against X Server
+RUN apt-get update && apt-get install -y --no-install-recommends \
+				xauth \
+		&& rm -rf /var/lib/apt/lists/*
+
+# Before switching user, root needs to ensure that entrypoint can be executed.
+COPY docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# During startup we need to prepare connection to X11-Server container
+USER xclient
+ENTRYPOINT ["/entrypoint.sh"]
+
+#========== suchja/wine
+
+# Inspired by monokrome/wine
+ENV WINE_MONO_VERSION 0.0.8
+USER root
+
+# Install some tools required for creating the image
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		curl \
+		unzip \
+		ca-certificates
+
+# Install wine and related packages
+RUN dpkg --add-architecture i386 \
+		&& apt-get update \
+		&& apt-get install -y --no-install-recommends \
+				wine \
+				wine32 \
+		&& rm -rf /var/lib/apt/lists/*
+
+# Use the latest version of winetricks
+RUN curl -SL 'https://raw.githubusercontent.com/Winetricks/winetricks/master/src/winetricks' -o /usr/local/bin/winetricks \
+		&& chmod +x /usr/local/bin/winetricks
+
+# Get latest version of mono for wine
+RUN mkdir -p /usr/share/wine/mono \
+	&& curl -SL 'http://sourceforge.net/projects/wine/files/Wine%20Mono/$WINE_MONO_VERSION/wine-mono-$WINE_MONO_VERSION.msi/download' -o /usr/share/wine/mono/wine-mono-$WINE_MONO_VERSION.msi \
+	&& chmod +x /usr/share/wine/mono/wine-mono-$WINE_MONO_VERSION.msi
+
+#================
+#RUN useradd -G xusers node
+RUN usermod -a -G xusers node
+# Wine really doesn't like to be run as root, so let's use a non-root user
+USER node
+#ENV HOME /home/xclient
+ENV WINEPREFIX /mnt/work/.wine
+ENV WINEARCH win32
+
+# Use xclient's home dir as working dir
+WORKDIR /mnt/work
+
+RUN echo "alias winegui='wine explorer /desktop=DockerDesktop,1024x768'" > ~/.bash_aliases 
+
+
+#xxx USER root
+#  NEVER RUN WINE AS ROOT.
+#USER node
+# WORKDIR /mnt/work
+CMD []
+

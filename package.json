@@ -1,5 +1,6 @@
 {
   "name": "laverna",
+  "productName": "laverna",
   "version": "0.7.4-RC1",
   "license": "MPL-2.0",
   "repository": {
@@ -30,6 +31,8 @@
     "cordova-lib": "^6.3.0",
     "del": "^2.2.1",
     "dev-ip": "^1.0.1",
+    "electron": "^1.6.11",
+    "electron-packager": "^8.7.1",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^3.1.0",
     "gulp-clean-css": "^2.0.12",

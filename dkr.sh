@@ -5,7 +5,7 @@ if [[ "$#" == "1" ]]; then
   fi
 echo $ver
 
-docker run -it --rm  --name mylaverna \
+docker run -it --rm -u root  --name mylaverna \
   -v $(pwd):/mnt/work  -w /mnt/work \
   -p 8888:9000 -p 3001:3001 \
   3hdeng/laverna:$ver \

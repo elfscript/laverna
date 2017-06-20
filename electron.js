@@ -5,6 +5,14 @@ const electron        = require('electron'),
     path              = require('path'),
     openUrl           = require('open');
 
+   module.paths.push(path.resolve('node_modules'));
+    module.paths.push(path.resolve('../node_modules'));
+    module.paths.push(path.resolve(__dirname, '..', '..', 'electron', 'node_modules'));
+    module.paths.push(path.resolve(__dirname, '..', '..', 'electron.asar', 'node_modules'));
+    module.paths.push(path.resolve(__dirname, '..', '..', 'app', 'node_modules'));
+    module.paths.push(path.resolve(__dirname, '..', '..', 'app.asar', 'node_modules'));
+  
+
 const {app, BrowserWindow, Menu, Tray, protocol} = electron;
 
 let argv        = require('minimist')(process.argv.slice(1)),
@@ -166,7 +174,7 @@ appHelper = {
                 // Serve the resource from the file system
                 req.url = 'file:///' + path.normalize(__dirname + '/dist/' + req.url);
             }
-
+            console.log(req.url);
             callback(req);
 
         });
@@ -208,7 +216,15 @@ appHelper = {
         }
 
         // Load the app
-        win.loadURL(this.page);
+        try{
+           win.loadURL(this.page);
+	}catch(e){
+           console.log("entering catch block");
+           console.log(e);
+           console.log("leaving catch block");
+           //win.webContents.executeJavaScript("
+           win.loadURL(this.page);
+        }
 
         // Show development tools
         if (process.env.NODE_ENV === 'dev' || argv.dev) {
